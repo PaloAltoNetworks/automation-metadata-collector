@@ -334,13 +334,13 @@ def replace_image_urls(readme_contents: str) -> str:
 
 
 def replace_relative_paths(url):
-    """Searches for links using relative paths (originally used in github.com) and alters them for use in pan.dev
+    """Searches for links using relative paths (originally used in github.com) and suitably alters them for use in pan.dev
 
     Args:
-        url (str): The URL string to be processed.
+        url (str): The string to be processed.
 
     Returns:
-        str: The URL string with the amended path.
+        str: The string with the amended paths.
 
     Example:
         >>> url = 'Visit the documentation at (../vmseries/README.md) for more information.'
@@ -348,20 +348,14 @@ def replace_relative_paths(url):
         >>> print(replaced_url)
         'Visit the documentation at (../vmseries/) for more information.'
     """
-    # pattern = r'\(\.\./([^)]+/README\.md)\)'
-    # replacement = r'(../\g<0>.split("/")[2]/)'
-    # replacement = r'(../\1)'
-    # pattern = '/README\.md\)'
-    # replacement = ')'
-    # \(    \.   \.   /    (  [^)]+   ) /   README  \.   md     \)
-    #  (     .    .    /    
-
-    # readme_pattern = r'\(\.\./([^)]+)/README\.md\)'
+    # Where there is 'something/README.me', we need to have just 'something' (remove 'README.me').
     readme_pattern = r'\(\.\./([^)]+)/README\.md([^)]*)\)'
-    # readme_replacement = r'(../\1)'
     readme_replacement = r'(../\1\2)'
     modified_string = re.sub(readme_pattern, readme_replacement, url)
-
+    
+    # Where there is a link to '../../examples/something', point to Terraform Registry.
+    # We may or may not have a Ref Arch listed that matches the 'something', so
+    # safer to point there than a pan.dev link.
     examples_pattern = r'\(\.\./\.\.(/examples/[^)]+)\)'
     examples_replacement = r'(https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest\1)'
     modified_string = re.sub(examples_pattern, examples_replacement, modified_string)

@@ -333,6 +333,27 @@ def replace_image_urls(readme_contents: str) -> str:
     return readme_contents
 
 
+def replace_relative_path(url):
+    """Searches for links using relative paths (originally used in github.com) and alters them for use in pan.dev
+
+    Args:
+        url (str): The URL string to be processed.
+
+    Returns:
+        str: The URL string with the amended path.
+
+    Example:
+        >>> url = 'Visit the documentation at (../vmseries/README.md) for more information.'
+        >>> replaced_url = replace_file_name(url)
+        >>> print(replaced_url)
+        'Visit the documentation at (../vmseries/) for more information.'
+    """
+    pattern = r'\(\.\./([^)]+/README\.md)\)'
+
+    replaced_url = re.sub(pattern, r'(../\1/)', url)
+    return replaced_url
+
+
 def main(modules_directory: str, dest_directory: str, module_type: str = None):
     """Main function
 
@@ -353,6 +374,7 @@ def main(modules_directory: str, dest_directory: str, module_type: str = None):
         readme_images = download_images(module)
         new_readme_contents = set_new_frontmatter(module)
         new_readme_contents = replace_image_urls(new_readme_contents)
+        new_readme_contents = replace_relative_path(new_readme_contents)
         new_readme_contents = sanitize_readme_contents(new_readme_contents)
         dest_file = dest_directory_path / f"{module.slug}.{OUTPUT_EXTENSION}"
         output_files.append(OutputFile(new_readme_contents, dest_file))

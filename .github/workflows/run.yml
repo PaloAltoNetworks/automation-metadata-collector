@@ -36,7 +36,7 @@ jobs:
         with:
           repository: PaloAltoNetworks/${{ matrix.modules.repo }}
           path: ${{ matrix.modules.repo }}
-          ref: readme-updates-for-automation-hub
+          ref: main
 
       - name: Check if commit to repo today
         if: github.event.inputs.force != 'true'

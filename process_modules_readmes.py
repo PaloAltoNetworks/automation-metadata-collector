@@ -348,10 +348,11 @@ def replace_relative_path(url):
         >>> print(replaced_url)
         'Visit the documentation at (../vmseries/) for more information.'
     """
-    pattern = r'\(\.\./([^)]+/README\.md)\)'
+    pattern = r'\(\.\./[^)]+/README\.md\)'
+    replacement = r'(../\g<0>.split("/")[2]/)'
 
-    replaced_url = re.sub(pattern, r'(../\1/)', url)
-    return replaced_url
+    modified_string = re.sub(pattern, replacement, string)
+    return modified_string
 
 
 def main(modules_directory: str, dest_directory: str, module_type: str = None):

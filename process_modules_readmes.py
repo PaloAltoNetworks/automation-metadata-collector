@@ -349,14 +349,17 @@ def replace_relative_paths(url):
         'Visit the documentation at (../vmseries/) for more information.'
     """
     # pattern = r'\(\.\./([^)]+/README\.md)\)'
-    readme_pattern = r'\(\.\./([^)]+)/README\.md\)'
     # replacement = r'(../\g<0>.split("/")[2]/)'
     # replacement = r'(../\1)'
-    readme_replacement = r'(../\1)'
     # pattern = '/README\.md\)'
     # replacement = ')'
     # \(    \.   \.   /    (  [^)]+   ) /   README  \.   md     \)
     #  (     .    .    /    
+
+    # readme_pattern = r'\(\.\./([^)]+)/README\.md\)'
+    readme_pattern = r'\(\.\./([^)]+)/README\.md([^)]*)\)'
+    # readme_replacement = r'(../\1)'
+    readme_replacement = r'(../\1\2)'
     modified_string = re.sub(readme_pattern, readme_replacement, url)
 
     examples_pattern = r'\(\.\./\.\.(/examples/[^)]+)\)'

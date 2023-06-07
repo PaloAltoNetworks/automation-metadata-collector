@@ -359,9 +359,9 @@ def replace_relative_paths(url):
     #  (     .    .    /    
     modified_string = re.sub(readme_pattern, readme_replacement, url)
 
-    example_pattern = r'\(\.\./\.\.(/examples/[^)]+)\)'
-    example_replacement = r'(https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest\1)'
-    modified_string = re.sub(examples_pattern, example_replacement, modified_string)
+    examples_pattern = r'\(\.\./\.\.(/examples/[^)]+)\)'
+    examples_replacement = r'(https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest\1)'
+    modified_string = re.sub(examples_pattern, examples_replacement, modified_string)
     
     return modified_string
 

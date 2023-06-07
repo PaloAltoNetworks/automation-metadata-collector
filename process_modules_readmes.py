@@ -352,7 +352,7 @@ def replace_relative_path(url):
     pattern = r'\(\.\./([^)]+)/README\.md\)'
     # replacement = r'(../\g<0>.split("/")[2]/)'
     # replacement = r'(../\1)'
-    replacement = r'(../\1/)'
+    replacement = r'(../\1)'
     # pattern = '/README\.md\)'
     # replacement = ')'
 

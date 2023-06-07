@@ -333,7 +333,7 @@ def replace_image_urls(readme_contents: str) -> str:
     return readme_contents
 
 
-def replace_relative_path(url):
+def replace_relative_paths(url):
     """Searches for links using relative paths (originally used in github.com) and alters them for use in pan.dev
 
     Args:
@@ -349,18 +349,20 @@ def replace_relative_path(url):
         'Visit the documentation at (../vmseries/) for more information.'
     """
     # pattern = r'\(\.\./([^)]+/README\.md)\)'
-    pattern = r'\(\.\./([^)]+)/README\.md\)'
+    readme_pattern = r'\(\.\./([^)]+)/README\.md\)'
     # replacement = r'(../\g<0>.split("/")[2]/)'
     # replacement = r'(../\1)'
-    replacement = r'(../\1)'
+    readme_replacement = r'(../\1)'
     # pattern = '/README\.md\)'
     # replacement = ')'
+    # \(    \.   \.   /    (  [^)]+   ) /   README  \.   md     \)
+    #  (     .    .    /    
+    modified_string = re.sub(readme_pattern, readme_replacement, url)
 
-
-# \(    \.   \.   /    (  [^)]+   ) /   README  \.   md     \)
-#  (     .    .    /    
-
-    modified_string = re.sub(pattern, replacement, url)
+    example_pattern = r'\(\.\./\.\.(/examples/[^)]+)\)'
+    example_replacement = r'(https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest\1)'
+    modified_string = re.sub(examples_pattern, example_replacement, modified_string)
+    
     return modified_string
 
 
@@ -384,7 +386,7 @@ def main(modules_directory: str, dest_directory: str, module_type: str = None):
         readme_images = download_images(module)
         new_readme_contents = set_new_frontmatter(module)
         new_readme_contents = replace_image_urls(new_readme_contents)
-        new_readme_contents = replace_relative_path(new_readme_contents)
+        new_readme_contents = replace_relative_paths(new_readme_contents)
         new_readme_contents = sanitize_readme_contents(new_readme_contents)
         dest_file = dest_directory_path / f"{module.slug}.{OUTPUT_EXTENSION}"
         output_files.append(OutputFile(new_readme_contents, dest_file))

@@ -2,26 +2,25 @@ name: Sync Terraform Modules
 run-name: sync
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
   workflow_dispatch:
     inputs:
-      force:
-        description: 'Force sync everything'
-        required: false
-        default: 'false'
+      cloud-id:
+        description: 'Which cloud to sync (aws, azure, gcp, all)'
+        required: true
+        default: 'all'
         type: choice
         options:
-        - true
-        - false
+          - all
+          - aws
+          - azure
+          - gcp
 
 jobs:
-  sync-readmes-from-modules:
-    name: Sync ${{ matrix.modules.cloudid }} modules
+  generate-docs:
+    name: Generate ${{ matrix.modules.cloudid }} module docs
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false # treat each job as separate
-      max-parallel: 1 # prevent conflicts with git commit
       matrix:
         modules:
           - cloudid: aws
@@ -36,61 +35,121 @@ jobs:
         with:
           repository: PaloAltoNetworks/${{ matrix.modules.repo }}
           path: ${{ matrix.modules.repo }}
-          ref: main
-
-      - name: Check if commit to repo today
-        if: github.event.inputs.force != 'true'
-        id: check_commit
-        run: |
-          cd ${{ matrix.modules.repo }}
-          git log --since="1 day ago" --pretty=format:"%h" | grep -q . && echo "changes=true" || echo "changes=false" >> "$GITHUB_OUTPUT"
-      
-      - name: No changes found
-        if: steps.check_commit.outputs.changes == 'false'
-        run: |
-          echo "::notice ::No changes found in ${{ matrix.modules.repo }} on $(date -u)" 
 
       - name: Checkout local scripts
-        if: steps.check_commit.outputs.changes != 'false'
+        # if: steps.check_commit.outputs.changes != 'false'
         uses: actions/checkout@v3
         with:
           path: 'scripts'
 
-      - name: Checkout output branch
-        if: steps.check_commit.outputs.changes != 'false'
-        uses: actions/checkout@v3
-        with:
-          ref: 'output'
-          path: 'output'
-
       - name: Setup Python
-        if: steps.check_commit.outputs.changes != 'false'
+        # if: steps.check_commit.outputs.changes != 'false'
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
           cache: 'pip' # caching pip dependencies
 
       - name: Install Python Dependencies
-        if: steps.check_commit.outputs.changes != 'false'
+        # if: steps.check_commit.outputs.changes != 'false'
         run: |
           python -m pip install --upgrade pip
           pip install -r ./scripts/requirements.txt
 
-      - name: Sync module readmes to pan.dev
-        if: steps.check_commit.outputs.changes != 'false'
+      - name: Generate module readmes for pan.dev
+        # if: steps.check_commit.outputs.changes != 'false'
         run: |
           tree .
-          python ./scripts/process_modules_readmes.py "./${{ matrix.modules.repo }}/modules" "./output/${{ matrix.modules.cloudid }}/vmseries/modules"
-          python ./scripts/process_modules_readmes.py --type refarch "./${{ matrix.modules.repo }}/examples" "./output/${{ matrix.modules.cloudid }}/vmseries/reference-architectures"
+          python ./scripts/process_modules_readmes.py "./${{ matrix.modules.repo }}/modules" "./output/vmseries/modules"
+          python ./scripts/process_modules_readmes.py --type refarch "./${{ matrix.modules.repo }}/examples" "./output/vmseries/reference-architectures"
       
-      - name: Commit and push changes
-        if: steps.check_commit.outputs.changes != 'false'
+      - name: Save module readmes
+        # if: steps.check_commit.outputs.changes != 'false'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.modules.cloudid }}
+          path: output
+      
+  
+  sync-to-pan-dev:
+    name: Sync to pan.dev
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    env:
+      SWFW_DIR: pan.dev/products/terraform/docs/swfw
+    steps:
+      - name: Download module readmes
+        uses: actions/download-artifact@v3
+        with:
+          path: output
+
+      - name: Checkout pan.dev repo
+        uses: actions/checkout@v3
+        with:
+          repository: PaloAltoNetworks/pan.dev
+          path: pan.dev
+
+      - name: Print output
         run: |
-          tree "./output"
-          cd output
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email '<>'
-          git add -A
-          git status
-          git commit -m "Sync module readmes for ${{ matrix.modules.cloudid }} on $(date -u)"
-          git push origin output
+          tree output
+
+      - name: Print pan.dev
+        run: |
+          tree "$SWFW_DIR"
+      
+      - name: Add generated docs to pan.dev
+        run: |
+          if [ -d output/aws ]; then
+            rm -rf "$SWFW_DIR/aws/modules/*"
+            rm -rf "$SWFW_DIR/aws/reference-architectures/*"
+            rsync -av output/aws/ "$SWFW_DIR/aws/"
+          fi
+          if [ -d output/azure ]; then
+            rm -rf "$SWFW_DIR/azure/modules/*"
+            rm -rf "$SWFW_DIR/azure/reference-architectures/*"
+            rsync -av output/azure/ "$SWFW_DIR/azure/"
+          fi
+          if [ -d output/gcp ]; then
+            rm -rf "$SWFW_DIR/gcp/modules/*"
+            rm -rf "$SWFW_DIR/gcp/reference-architectures/*"
+            rsync -av output/gcp/ "$SWFW_DIR/gcp/"
+          fi
+
+      - name: Print pan.dev after
+        run: |
+          tree "$SWFW_DIR"
+          cd "$SWFW_DIR" && git status
+
+      - name: Generate GitHub token
+        id: generate-token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+          installation_id: ${{ secrets.APP_INSTALL_ID }}
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        id: create-pull-request
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          path: pan.dev
+          branch: sync-terraform-module-docs
+          delete-branch: true
+          commit-message: 'Sync Terraform module documentation'
+          title: 'Sync Terraform module documentation to pan.dev'
+          body: 'This PR was automatically generated by a workflow.'
+
+      - name: Pull Request results
+        run: |
+          echo "${{ toJSON(steps.create-pull-request.outputs) }}"
+
+      - name: Print no pull request
+        if: steps.create-pull-request.outputs.pull-request-number == ''
+        run: |
+          echo "::notice ::No action taken, no changes to commit"
+
+      - name: Print pull request
+        if: steps.create-pull-request.outputs.pull-request-number
+        run: |
+          echo "::notice ::PR ${{ steps.create-pull-request.outputs.pull-request-operation }}: ${{ steps.create-pull-request.outputs.pull-request-url }}"
+        

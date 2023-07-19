@@ -272,14 +272,15 @@ def determine_module_type(readme_path: Path, readme_contents: str) -> str:
         str: Type of module
     """
     if readme_path.parts[-3] == "examples":
-        if re.search(r"reference architecture", readme_contents, re.IGNORECASE):
-            return "refarch"
-        else:
-            return "example"
-    elif readme_path.parts[-3] == "modules":
+        # If execution reaches here, frontmatter for type was not explicitly set,
+        # so we assume that this is not a Reference Architecture, and hence
+        # set the type to be an Example, based on the path of this README file
+        return "example"
+    if readme_path.parts[-3] == "modules":
+        # If execution reaches here, frontmatter for type was not explicitly set,
+        # so we assume this is a module based on the path of this README file
         return "module"
-    else:
-        raise ValueError(f"Could not determine module type from path: {readme_path}")
+    raise ValueError(f"Could not determine module type from path: {readme_path}")
 
 def delete_markdown_files(directory: Path):
     """Delete all markdown files in the directory
@@ -462,7 +463,7 @@ def main(modules_directory: str, dest_directory: str, module_type: str = None):
     """
     dest_directory_path = Path(dest_directory)
     tf_modules = get_module_readme_files(Path(modules_directory))
-    if module_type is not None:
+    if module_type is not None: # if module_type is supplied at execution time, only process modules of that type
         tf_modules = [module for module in tf_modules if module.type == module_type]
     output_files: list[OutputFile] = []
     images: list[dict[str, bytes]] = []

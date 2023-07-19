@@ -80,6 +80,7 @@ jobs:
           tree .
           python ./scripts/process_modules_readmes.py "./${{ env.repo }}/modules" "./output/vmseries/modules"
           python ./scripts/process_modules_readmes.py --type refarch "./${{ env.repo }}/examples" "./output/vmseries/reference-architectures"
+          python ./scripts/process_modules_readmes.py --type example "./${{ env.repo }}/examples" "./output/vmseries/examples"
       - name: Save module readmes
         # if: steps.check_commit.outputs.changes != 'false'
         uses: actions/upload-artifact@v3

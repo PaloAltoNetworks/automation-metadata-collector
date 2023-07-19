@@ -61,7 +61,7 @@ jobs:
         with:
           repository: PaloAltoNetworks/${{ matrix.modules.repo }}
           path: ${{ matrix.modules.repo }}
-      
+
       - name: Checkout local scripts
         # if: steps.check_commit.outputs.changes != 'false'
         uses: actions/checkout@v3
@@ -87,7 +87,7 @@ jobs:
           tree .
           python ./scripts/process_modules_readmes.py "./${{ matrix.modules.repo }}/modules" "./output/vmseries/modules"
           python ./scripts/process_modules_readmes.py --type refarch "./${{ matrix.modules.repo }}/examples" "./output/vmseries/reference-architectures"
-
+      
       - name: Save module readmes
         # if: steps.check_commit.outputs.changes != 'false'
         uses: actions/upload-artifact@v3

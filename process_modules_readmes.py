@@ -333,6 +333,125 @@ def replace_image_urls(readme_contents: str) -> str:
     return readme_contents
 
 
+def insert_external_links(readme_contents: str, modules_directory: str, module_slug: str, module_cloud_id: str):
+    """
+    Inserts images linked to external references such as GitHub and Terraform Registry.
+    
+    Args:
+        readme_contents (str): The input string to process.
+        modules_directory (str): The directory passed in to the sync system.
+        
+    Returns:
+        str: The modified string with the image markdown code inserted.
+    """
+
+    # Slug looks like: terraform-azurerm-vmseries-modules
+    github_repo_slug = extract_github_repo_slug(modules_directory)
+    # Cloud ID looks like: azurerm, google, or aws (note azurerm not azure, and google not gcp)
+    terraform_registry_cloud_id = convert_cloud_id(module_cloud_id)
+
+    # URL looks like: https://github.com/PaloAltoNetworks/terraform-azurerm-vmseries-modules/tree/main/examples/dedicated_vmseries
+    github_image_url = "https://github.com/PaloAltoNetworks/" + github_repo_slug + "/tree/main/examples/" + module_slug
+    github_image_path = "/img/view_on_github.png"
+
+    # URL looks like: https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/azurerm/latest/examples/dedicated_vmseries
+    terraform_registry_image_url = "https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/" + terraform_registry_cloud_id + "/latest/examples/" + module_slug
+    terraform_registry_image_path = "/img/view_on_terraform_registry.png"
+
+    # Find the first occurrence of '## ' in the README, above this is where the linked images will be inserted
+    index = readme_contents.find('## ')
+    
+    if index != -1:
+        # Insert the image markdown code above the '## '
+        # GitHub image with link
+        github_image_markdown = f"[![GitHub Logo]({github_image_path})]({github_image_url})"
+        # Terraform Registry image with link
+        terraform_registry_image_markdown = f"[![Terraform Logo]({terraform_registry_image_path})]({terraform_registry_image_url})\n\n"
+        # Insert all linked images
+        readme_contents = readme_contents[:index] + github_image_markdown + " " + terraform_registry_image_markdown + readme_contents[index:]
+    
+    return readme_contents
+
+
+def extract_github_repo_slug(modules_directory: str):
+    """
+    Extracts the 'terraform-<section>' from the input string.
+    
+    Args:
+        modules_directory (str): The input string from which to extract the GitHub repo slug.
+        
+    Returns:
+        str: The extracted GitHub repo slug if found, or None if no matching section is found.
+    """
+    sections = modules_directory.split("/")
+    for section in sections:
+        if section.startswith("terraform-"):
+            return section
+    return None
+
+
+def convert_cloud_id(cloud_id: str) -> str:
+    """
+    Maps the input cloud_id as used in pan.dev to its corresponding cloud provider as used in Terraform Registry.
+
+    Args:
+        cloud_id (str): The input cloud_id to be mapped.
+
+    Returns:
+        str: The mapped cloud provider name.
+
+    Raises:
+        ValueError: If the input cloud_id is not recognized.
+
+    Examples:
+        >>> map_cloud_id("aws")
+        'aws'
+        >>> map_cloud_id("gcp")
+        'google'
+        >>> map_cloud_id("azure")
+        'azurerm'
+    """
+    if cloud_id == "aws":
+        return "aws"
+    elif cloud_id == "gcp":
+        return "google"
+    elif cloud_id == "azure":
+        return "azurerm"
+    else:
+        raise ValueError("Unrecognized cloud_id:" + cloud_id)
+
+
+
+def replace_relative_paths(url):
+    """Searches for links using relative paths (originally used in github.com) and suitably alters them for use in pan.dev
+
+    Args:
+        url (str): The string to be processed.
+
+    Returns:
+        str: The string with the amended paths.
+
+    Example:
+        >>> url = 'Visit the documentation at (../vmseries/README.md) for more information.'
+        >>> replaced_url = replace_file_name(url)
+        >>> print(replaced_url)
+        'Visit the documentation at (../vmseries/) for more information.'
+    """
+    # Where there is 'something/README.me', we need to have just 'something' (remove 'README.me').
+    readme_pattern = r'\(\.\./([^)]+)/README\.md([^)]*)\)'
+    readme_replacement = r'(../\1\2)'
+    modified_string = re.sub(readme_pattern, readme_replacement, url)
+    
+    # Where there is a link to '../../examples/something', point to Terraform Registry.
+    # We may or may not have a Ref Arch listed that matches the 'something', so
+    # safer to point there than a pan.dev link.
+    examples_pattern = r'\(\.\./\.\.(/examples/[^)]+)\)'
+    examples_replacement = r'(https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest\1)'
+    modified_string = re.sub(examples_pattern, examples_replacement, modified_string)
+    
+    return modified_string
+
+
 def main(modules_directory: str, dest_directory: str, module_type: str = None):
     """Main function
 
@@ -353,7 +472,9 @@ def main(modules_directory: str, dest_directory: str, module_type: str = None):
         readme_images = download_images(module)
         new_readme_contents = set_new_frontmatter(module)
         new_readme_contents = replace_image_urls(new_readme_contents)
+        new_readme_contents = replace_relative_paths(new_readme_contents)
         new_readme_contents = sanitize_readme_contents(new_readme_contents)
+        new_readme_contents = insert_external_links(new_readme_contents, modules_directory, module.slug, module.cloud_id)
         dest_file = dest_directory_path / f"{module.slug}.{OUTPUT_EXTENSION}"
         output_files.append(OutputFile(new_readme_contents, dest_file))
         images.append(readme_images)

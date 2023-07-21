@@ -13,6 +13,10 @@ on:
           - aws
           - azure
           - gcp
+      repo_ref:
+        description: 'Which tag/branch to select from the source repo'
+        default: 'main'
+        type: string
 
 jobs:
   generate-matrix:
@@ -57,6 +61,7 @@ jobs:
         with:
           repository: PaloAltoNetworks/${{ env.repo }}
           path: ${{ env.repo }}
+          ref: '${{ inputs.repo_ref }}'
 
       - name: Checkout local scripts
         # if: steps.check_commit.outputs.changes != 'false'

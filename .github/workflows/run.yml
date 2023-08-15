@@ -13,6 +13,10 @@ on:
           - aws
           - azure
           - gcp
+      repo_ref:
+        description: 'Which tag/branch to select from the source repo'
+        default: 'main'
+        type: string
 
 jobs:
   generate-matrix:
@@ -57,6 +61,7 @@ jobs:
         with:
           repository: PaloAltoNetworks/${{ env.repo }}
           path: ${{ env.repo }}
+          ref: '${{ inputs.repo_ref }}'
 
       - name: Checkout local scripts
         # if: steps.check_commit.outputs.changes != 'false'
@@ -80,6 +85,7 @@ jobs:
           tree .
           python ./scripts/process_modules_readmes.py "./${{ env.repo }}/modules" "./output/vmseries/modules"
           python ./scripts/process_modules_readmes.py --type refarch "./${{ env.repo }}/examples" "./output/vmseries/reference-architectures"
+          python ./scripts/process_modules_readmes.py --type example "./${{ env.repo }}/examples" "./output/vmseries/examples"
       - name: Save module readmes
         # if: steps.check_commit.outputs.changes != 'false'
         uses: actions/upload-artifact@v3

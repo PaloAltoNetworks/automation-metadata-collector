@@ -7,7 +7,7 @@ Automation Hub Metadata is collected dynamically without need to set it in the
 README. However, the values collected can be overridden in the README
 frontmatter.
 
-Overrides:
+### Overrides
 ```
 title:
 What shows in the browser tab header
@@ -23,7 +23,7 @@ Default is synthesized from the module/example directory name
 
 type: (module|example|refarch)
 Override what the README is for
-Default is 'module' if in modules directory, 'example' if in examples directory, or 'refarch' if in examples directory and contains the term 'Reference Architecture'
+Default is 'module' if in modules directory, 'example' if in examples directory
 
 description:
 Set the description that shows in the card for each module in the index pages
@@ -39,7 +39,7 @@ For example, here is a README file that `overrides` the `short_title`, type, and
 
 ```yaml
 ---
-short_title: Combined model
+short_title: Combined Model
 type: refarch
 description: Deploy to AWS using the Combined model reference architecture
 ---

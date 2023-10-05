@@ -334,7 +334,7 @@ def replace_image_urls(readme_contents: str) -> str:
     return readme_contents
 
 
-def insert_external_links(readme_contents: str, modules_directory: str, module_slug: str, module_cloud_id: str):
+def insert_external_links(readme_contents: str, modules_directory: str, module_type: str, module_slug: str, module_cloud_id: str):
     """
     Inserts images linked to external references such as GitHub and Terraform Registry.
     
@@ -352,11 +352,20 @@ def insert_external_links(readme_contents: str, modules_directory: str, module_s
     terraform_registry_cloud_id = convert_cloud_id(module_cloud_id)
 
     # URL looks like: https://github.com/PaloAltoNetworks/terraform-azurerm-vmseries-modules/tree/main/examples/dedicated_vmseries
-    github_image_url = "https://github.com/PaloAltoNetworks/" + github_repo_slug + "/tree/main/examples/" + module_slug
+    github_image_url = "https://github.com/PaloAltoNetworks/" + github_repo_slug + "/tree/main/" + module_type + "s/" + module_slug
     github_image_path = "/img/view_on_github.png"
 
-    # URL looks like: https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/azurerm/latest/examples/dedicated_vmseries
-    terraform_registry_image_url = "https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/" + terraform_registry_cloud_id + "/latest/examples/" + module_slug
+    # URL looks like:
+    # - for examples: https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/azurerm/latest/examples/dedicated_vmseries
+    # - for modules: https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest/submodules/alb
+    match module_type:
+        case "example":
+            terraform_registry_image_url = "https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/" + terraform_registry_cloud_id + "/latest/examples/" + module_slug
+        case "module":
+            terraform_registry_image_url = "https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/" + terraform_registry_cloud_id + "/latest/submodules/" + module_slug
+        case _:
+            raise ValueError(f"Invalid module type: {module_type}")
+    
     terraform_registry_image_path = "/img/view_on_terraform_registry.png"
 
     # Find the first occurrence of '## ' in the README, above this is where the linked images will be inserted
@@ -475,7 +484,7 @@ def main(modules_directory: str, dest_directory: str, module_type: str = None):
         new_readme_contents = replace_image_urls(new_readme_contents)
         new_readme_contents = replace_relative_paths(new_readme_contents)
         new_readme_contents = sanitize_readme_contents(new_readme_contents)
-        new_readme_contents = insert_external_links(new_readme_contents, modules_directory, module.slug, module.cloud_id)
+        new_readme_contents = insert_external_links(new_readme_contents, modules_directory, module.type, module.slug, module.cloud_id)
         dest_file = dest_directory_path / f"{module.slug}.{OUTPUT_EXTENSION}"
         output_files.append(OutputFile(new_readme_contents, dest_file))
         images.append(readme_images)

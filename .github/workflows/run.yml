@@ -15,7 +15,7 @@ on:
           - gcp
       repo_ref:
         description: 'Which tag/branch to select from the source repo'
-        default: 'main'
+        default: 'test-swfw-hub-sync' # NOTE updated for testing sync
         type: string
 
 jobs:

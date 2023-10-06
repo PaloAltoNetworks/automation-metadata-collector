@@ -351,26 +351,29 @@ def insert_external_links(readme_contents: str, modules_directory: str, module_t
     # Cloud ID looks like: azurerm, google, or aws (note azurerm not azure, and google not gcp)
     terraform_registry_cloud_id = convert_cloud_id(module_cloud_id)
 
+    match module_type:
+        case "example" | "refarch":
+            github_path = "examples/"
+            tf_registry_path = "/latest/examples/"
+        case "module":
+            github_path = "modules/"
+            tf_registry_path = "/latest/submodules/"
+        case _:
+            raise ValueError(f"Invalid module type: {module_type}")
+
     # URL looks like: https://github.com/PaloAltoNetworks/terraform-azurerm-vmseries-modules/tree/main/examples/dedicated_vmseries
-    github_image_url = "https://github.com/PaloAltoNetworks/" + github_repo_slug + "/tree/main/" + module_type + "s/" + module_slug
+    github_image_url = "https://github.com/PaloAltoNetworks/" + github_repo_slug + "/tree/main/" + github_path + module_slug
     github_image_path = "/img/view_on_github.png"
 
     # URL looks like:
     # - for examples: https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/azurerm/latest/examples/dedicated_vmseries
     # - for modules: https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest/submodules/alb
-    match module_type:
-        case "example":
-            terraform_registry_image_url = "https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/" + terraform_registry_cloud_id + "/latest/examples/" + module_slug
-        case "module":
-            terraform_registry_image_url = "https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/" + terraform_registry_cloud_id + "/latest/submodules/" + module_slug
-        case _:
-            raise ValueError(f"Invalid module type: {module_type}")
-    
+    terraform_registry_image_url = "https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/" + terraform_registry_cloud_id + tf_registry_path + module_slug
     terraform_registry_image_path = "/img/view_on_terraform_registry.png"
 
     # Find the first occurrence of '## ' in the README, above this is where the linked images will be inserted
     index = readme_contents.find('## ')
-    
+
     if index != -1:
         # Insert the image markdown code above the '## '
         # GitHub image with link

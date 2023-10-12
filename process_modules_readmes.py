@@ -25,6 +25,7 @@ KNOWN_ACRYONYMS = [
     "lb",
     "http",
     "iam",
+    "vpn",
 ]
 
 T = TypeVar('T')

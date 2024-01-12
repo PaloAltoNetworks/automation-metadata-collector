@@ -221,6 +221,8 @@ def set_new_frontmatter(module: TFModule) -> str:
         "terraform",
         "vmseries",
         "vm-series",
+        "swfw",
+        "software-firewalls",
         module.cloud_id,
     ]
     return fm.dumps(frontmatter)
@@ -347,7 +349,7 @@ def insert_external_links(readme_contents: str, modules_directory: str, module_t
         str: The modified string with the image markdown code inserted.
     """
 
-    # Slug looks like: terraform-azurerm-vmseries-modules
+    # Slug looks like: terraform-azurerm-swfw-modules
     github_repo_slug = extract_github_repo_slug(modules_directory)
     # Cloud ID looks like: azurerm, google, or aws (note azurerm not azure, and google not gcp)
     terraform_registry_cloud_id = convert_cloud_id(module_cloud_id)
@@ -362,14 +364,14 @@ def insert_external_links(readme_contents: str, modules_directory: str, module_t
         case _:
             raise ValueError(f"Invalid module type: {module_type}")
 
-    # URL looks like: https://github.com/PaloAltoNetworks/terraform-azurerm-vmseries-modules/tree/main/examples/dedicated_vmseries
+    # URL looks like: https://github.com/PaloAltoNetworks/terraform-azurerm-swfw-modules/tree/main/examples/dedicated_vmseries
     github_image_url = "https://github.com/PaloAltoNetworks/" + github_repo_slug + "/tree/main/" + github_path + module_slug
     github_image_path = "/img/view_on_github.png"
 
     # URL looks like:
-    # - for examples: https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/azurerm/latest/examples/dedicated_vmseries
-    # - for modules: https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest/submodules/alb
-    terraform_registry_image_url = "https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/" + terraform_registry_cloud_id + tf_registry_path + module_slug
+    # - for examples: https://registry.terraform.io/modules/PaloAltoNetworks/swfw-modules/azurerm/latest/examples/dedicated_vmseries
+    # - for modules: https://registry.terraform.io/modules/PaloAltoNetworks/swfw-modules/aws/latest/submodules/alb
+    terraform_registry_image_url = "https://registry.terraform.io/modules/PaloAltoNetworks/swfw-modules/" + terraform_registry_cloud_id + tf_registry_path + module_slug
     terraform_registry_image_path = "/img/view_on_terraform_registry.png"
 
     # Find the first occurrence of '## ' in the README, above this is where the linked images will be inserted
@@ -460,7 +462,7 @@ def replace_relative_paths(url):
     # We may or may not have a Ref Arch listed that matches the 'something', so
     # safer to point there than a pan.dev link.
     examples_pattern = r'\(\.\./\.\.(/examples/[^)]+)\)'
-    examples_replacement = r'(https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest\1)'
+    examples_replacement = r'(https://registry.terraform.io/modules/PaloAltoNetworks/swfw-modules/aws/latest\1)'
     modified_string = re.sub(examples_pattern, examples_replacement, modified_string)
     
     return modified_string

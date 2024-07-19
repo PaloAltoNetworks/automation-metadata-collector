@@ -117,18 +117,21 @@ jobs:
       - name: Add generated docs to pan.dev
         run: |
           if [ -d output/aws ]; then
-            rm -rf "$SWFW_DIR/aws/modules/*"
-            rm -rf "$SWFW_DIR/aws/reference-architectures/*"
+            rm -rf "$SWFW_DIR/aws/vmseries/modules/*"
+            rm -rf "$SWFW_DIR/aws/vmseries/reference-architectures/*"
+            rm -rf "$SWFW_DIR/aws/vmseries/examples/*"
             rsync -av output/aws/ "$SWFW_DIR/aws/"
           fi
           if [ -d output/azure ]; then
-            rm -rf "$SWFW_DIR/azure/modules/*"
-            rm -rf "$SWFW_DIR/azure/reference-architectures/*"
+            rm -rf "$SWFW_DIR/azure/vmseries/modules/*"
+            rm -rf "$SWFW_DIR/azure/vmseries/reference-architectures/*"
+            rm -rf "$SWFW_DIR/azure/vmseries/examples/*"
             rsync -av output/azure/ "$SWFW_DIR/azure/"
           fi
           if [ -d output/gcp ]; then
-            rm -rf "$SWFW_DIR/gcp/modules/*"
-            rm -rf "$SWFW_DIR/gcp/reference-architectures/*"
+            rm -rf "$SWFW_DIR/gcp/vmseries/modules/*"
+            rm -rf "$SWFW_DIR/gcp/vmseries/reference-architectures/*"
+            rm -rf "$SWFW_DIR/gcp/vmseries/examples/*"
             rsync -av output/gcp/ "$SWFW_DIR/gcp/"
           fi
       - name: Print pan.dev after

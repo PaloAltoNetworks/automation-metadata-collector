@@ -87,7 +87,7 @@ jobs:
           python ./scripts/process_modules_readmes.py --type example "./${{ env.repo }}/examples" "./output/vmseries/examples"
       - name: Save module readmes
         # if: steps.check_commit.outputs.changes != 'false'
-        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5 # v3
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ matrix.cloudid }}
           path: output
@@ -100,7 +100,7 @@ jobs:
       SWFW_DIR: pan.dev/products/terraform/docs/swfw
     steps:
       - name: Download module readmes
-        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
         with:
           path: output
       - name: Checkout pan.dev repo

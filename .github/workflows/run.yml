@@ -148,11 +148,11 @@ jobs:
             rm -rf $SWFW_DIR/gcp/vmseries/modules/*
             rm -rf $SWFW_DIR/gcp/vmseries/reference-architectures/*
             rm -rf $SWFW_DIR/gcp/vmseries/examples/*
-            # Clean and sync cloudngfw content
-            rm -rf $SWFW_DIR/gcp/cloudngfw/modules/*
-            rm -rf $SWFW_DIR/gcp/cloudngfw/reference-architectures/*
-            rm -rf $SWFW_DIR/gcp/cloudngfw/examples/*
-            rsync -av output/gcp/ "$SWFW_DIR/gcp/"
+            # # Clean and sync cloudngfw content
+            # rm -rf $SWFW_DIR/gcp/cloudngfw/modules/*
+            # rm -rf $SWFW_DIR/gcp/cloudngfw/reference-architectures/*
+            # rm -rf $SWFW_DIR/gcp/cloudngfw/examples/*
+            # rsync -av output/gcp/ "$SWFW_DIR/gcp/"
           fi
       - name: Print pan.dev after
         run: |

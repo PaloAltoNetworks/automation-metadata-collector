@@ -60,6 +60,7 @@ class TFModule(NamedTuple):
     source_file: str
     description: Optional[str]
     show_in_hub: bool
+    swfw: Optional[str]
     # version: str
 
 class OutputFile(NamedTuple):
@@ -165,6 +166,9 @@ def read_and_parse_readme_file(readme_file: Path) -> TFModule:
     description = get_meta(
         frontmatter, "description", None
     )
+    swfw = get_meta(
+        frontmatter, "swfw", None
+    )
     return TFModule(
         title=title,
         slug=slug,
@@ -173,6 +177,7 @@ def read_and_parse_readme_file(readme_file: Path) -> TFModule:
         type=module_type,
         show_in_hub=show_in_hub,
         description=description,
+        swfw=swfw,
         source_file=str(readme_file),
         readme_contents=readme_contents,
     )
@@ -468,18 +473,26 @@ def replace_relative_paths(url):
     return modified_string
 
 
-def main(modules_directory: str, dest_directory: str, module_type: str = None):
+def main(modules_directory: str, dest_directory: str, module_type: str = None, swfw_filter: str = None):
     """Main function
 
     Args:
         modules_directory (str): Path to the modules directory
         dest_directory (str): Path to the destination directory
         module_type (str, optional): Process only modules of this type (module, example, refarch). Defaults to None.
+        swfw_filter (str, optional): Process only modules with this swfw value (vmseries, cloudngfw). Defaults to None.
     """
     dest_directory_path = Path(dest_directory)
     tf_modules = get_module_readme_files(Path(modules_directory))
     if module_type is not None: # if module_type is supplied at execution time, only process modules of that type
         tf_modules = [module for module in tf_modules if module.type == module_type]
+    if swfw_filter is not None: # if swfw_filter is supplied, only process modules with matching swfw value
+        if swfw_filter == "vmseries":
+            # For vmseries, include modules with swfw=vmseries OR no swfw field (backward compatibility)
+            tf_modules = [module for module in tf_modules if module.swfw == "vmseries" or module.swfw is None]
+        else:
+            # For other values (like cloudngfw), only include exact matches
+            tf_modules = [module for module in tf_modules if module.swfw == swfw_filter]
     output_files: list[OutputFile] = []
     images: list[dict[str, bytes]] = []
     for module in tf_modules:
@@ -511,9 +524,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--type", type=str, default=None, required=False, help="Process only modules of this type (module, example, refarch)"
     )
+    parser.add_argument(
+        "--swfw", type=str, default=None, required=False, help="Process only modules with this swfw value (vmseries, cloudngfw)"
+    )
     parser.add_argument("modules_directory", type=str, help="Modules directory")
     parser.add_argument("dest_directory", type=str, help="Destination directory")
 
     args = parser.parse_args()
 
-    main(args.modules_directory, args.dest_directory, args.type)
+    main(args.modules_directory, args.dest_directory, args.type, args.swfw)

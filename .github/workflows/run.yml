@@ -82,9 +82,14 @@ jobs:
         # if: steps.check_commit.outputs.changes != 'false'
         run: |
           tree .
-          python ./scripts/process_modules_readmes.py "./${{ env.repo }}/modules" "./output/vmseries/modules"
-          python ./scripts/process_modules_readmes.py --type refarch "./${{ env.repo }}/examples" "./output/vmseries/reference-architectures"
-          python ./scripts/process_modules_readmes.py --type example "./${{ env.repo }}/examples" "./output/vmseries/examples"
+          # Generate vmseries content (backward compatible - includes modules without swfw field)
+          python ./scripts/process_modules_readmes.py --swfw vmseries "./${{ env.repo }}/modules" "./output/vmseries/modules"
+          python ./scripts/process_modules_readmes.py --type refarch --swfw vmseries "./${{ env.repo }}/examples" "./output/vmseries/reference-architectures"
+          python ./scripts/process_modules_readmes.py --type example --swfw vmseries "./${{ env.repo }}/examples" "./output/vmseries/examples"
+          # Generate cloudngfw content
+          python ./scripts/process_modules_readmes.py  "./${{ env.repo }}/modules" "./output/cloudngfw/modules"
+          python ./scripts/process_modules_readmes.py --type refarch --swfw cloudngfw "./${{ env.repo }}/examples" "./output/cloudngfw/reference-architectures"
+          python ./scripts/process_modules_readmes.py --type example "./${{ env.repo }}/examples" "./output/cloudngfw/examples"
       - name: Save module readmes
         # if: steps.check_commit.outputs.changes != 'false'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -117,21 +122,36 @@ jobs:
       - name: Add generated docs to pan.dev
         run: |
           if [ -d output/aws ]; then
+            # Clean and sync vmseries content
             rm -rf $SWFW_DIR/aws/vmseries/modules/*
             rm -rf $SWFW_DIR/aws/vmseries/reference-architectures/*
             rm -rf $SWFW_DIR/aws/vmseries/examples/*
+            # Clean and sync cloudngfw content
+            rm -rf $SWFW_DIR/aws/cloudngfw/modules/*
+            rm -rf $SWFW_DIR/aws/cloudngfw/reference-architectures/*
+            rm -rf $SWFW_DIR/aws/cloudngfw/examples/*
             rsync -av output/aws/ "$SWFW_DIR/aws/"
           fi
           if [ -d output/azure ]; then
+            # Clean and sync vmseries content
             rm -rf $SWFW_DIR/azure/vmseries/modules/*
             rm -rf $SWFW_DIR/azure/vmseries/reference-architectures/*
             rm -rf $SWFW_DIR/azure/vmseries/examples/*
+            # Clean and sync cloudngfw content
+            rm -rf $SWFW_DIR/azure/cloudngfw/modules/*
+            rm -rf $SWFW_DIR/azure/cloudngfw/reference-architectures/*
+            rm -rf $SWFW_DIR/azure/cloudngfw/examples/*
             rsync -av output/azure/ "$SWFW_DIR/azure/"
           fi
           if [ -d output/gcp ]; then
+            # Clean and sync vmseries content
             rm -rf $SWFW_DIR/gcp/vmseries/modules/*
             rm -rf $SWFW_DIR/gcp/vmseries/reference-architectures/*
             rm -rf $SWFW_DIR/gcp/vmseries/examples/*
+            # Clean and sync cloudngfw content
+            rm -rf $SWFW_DIR/gcp/cloudngfw/modules/*
+            rm -rf $SWFW_DIR/gcp/cloudngfw/reference-architectures/*
+            rm -rf $SWFW_DIR/gcp/cloudngfw/examples/*
             rsync -av output/gcp/ "$SWFW_DIR/gcp/"
           fi
       - name: Print pan.dev after
